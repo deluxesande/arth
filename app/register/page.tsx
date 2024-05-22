@@ -1,32 +1,39 @@
+import React from "react";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { SubmitButton } from "@components/buttons/submit-button";
 
-export default function Login({
+export default function Register({
     searchParams,
 }: {
     searchParams: { message: string };
 }) {
-    const signIn = async (formData: FormData) => {
+    const signUp = async (formData: FormData) => {
         "use server";
 
+        const origin = headers().get("origin");
         const email = formData.get("email") as string;
         const password = formData.get("password") as string;
         const supabase = createClient();
 
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signUp({
             email,
             password,
+            options: {
+                emailRedirectTo: `${origin}/auth/callback`,
+            },
         });
 
         if (error) {
             return redirect("/login?message=Could not authenticate user");
         }
 
-        return redirect("/dashboard");
+        return redirect(
+            "/login?message=Check email to continue sign in process"
+        );
     };
-
     return (
         <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2">
             <Link
@@ -71,19 +78,19 @@ export default function Login({
                     required
                 />
                 <SubmitButton
-                    formAction={signIn}
+                    formAction={signUp}
                     className="bg-green-700 rounded-md px-4 py-2 text-foreground mb-2"
-                    pendingText="Signing In..."
+                    pendingText="Signing Up..."
                 >
-                    Sign In
+                    Sign Up
                 </SubmitButton>
                 <p>
                     Already have an account?
                     <Link
-                        href="/register"
+                        href="/login"
                         className="text-center text-blue-500 ml-2"
                     >
-                        Sign up
+                        Log in
                     </Link>
                 </p>
                 {searchParams?.message && (
